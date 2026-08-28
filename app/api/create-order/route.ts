@@ -4,20 +4,21 @@ import { createClient } from "@supabase/supabase-js";
 // 使用 Service Role Key 初始化 Supabase（绕过 RLS，拥有全部权限）
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!   // 这个密钥需要在 .env.local 中配置
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export async function POST(req: Request) {
   try {
-    // 从请求体中获取订单信息
-    const { items, total, email, method } = await req.json();
+    // 从请求体中获取订单信息（现在用 name 和 phone 代替 email）
+    const { items, total, name, phone, method } = await req.json();
 
     // 插入订单到 Supabase 的 orders 表
     const { data, error } = await supabase
       .from("orders")
       .insert([
         {
-          customer_email: email || "cliente@correo.com",
+          customer_name: name || "Cliente",
+          customer_phone: phone || "No especificado",
           items: items,
           total_amount: total,
           status: "pending",

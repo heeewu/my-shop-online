@@ -24,3 +24,72 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+
+/* Toast 动画 */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out forwards;
+}
+
+/* 按钮点击反馈动画 */
+@keyframes bounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+.animate-bounce {
+  animation: bounce 0.4s ease;
+}
+
+/* 移动端适配优化 */
+@media (max-width: 640px) {
+  /* 卡片网格从 4 列改为 2 列 */
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* 表格在手机上横向滚动 */
+  .table-responsive {
+    overflow-x: auto;
+    display: block;
+    white-space: nowrap;
+  }
+
+  /* 侧边栏在手机上隐藏/折叠 */
+  .sidebar-mobile {
+    display: none;
+  }
+
+  /* 调整内边距 */
+  .p-8 {
+    padding: 1rem;
+  }
+
+  /* 按钮在手机上更易点击 */
+  button, a {
+    min-height: 44px;
+  }
+}
+
+/* 移动端菜单（可选） */
+@media (max-width: 768px) {
+  .admin-sidebar {
+    display: none;
+  }
+
+  .admin-main {
+    margin-left: 0 !important;
+    padding: 1rem !important;
+  }
+}

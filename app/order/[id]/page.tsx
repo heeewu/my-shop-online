@@ -12,6 +12,8 @@ type Order = {
   status: string;
   payment_method?: string;
   reference_number?: string;
+  customer_name?: string;   // ✅ 新增
+  customer_phone?: string;  // ✅ 新增
 };
 
 export default function OrderPage() {
@@ -61,7 +63,6 @@ export default function OrderPage() {
       alert("确认失败，请重试");
       console.error("Supabase 更新失败:", error);
     } else {
-      // ✅ 清空购物车
       clearCart();
       alert("✅ 已收到您的确认！购物车已清空，管理员将尽快核实。");
       window.location.reload();
@@ -74,12 +75,37 @@ export default function OrderPage() {
   return (
     <main className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-md">
+        {/* 🖨️ 打印按钮 - 位于页面右上角 */}
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={() => window.print()}
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium transition"
+          >
+            🖨️ 打印订单
+          </button>
+        </div>
+
         <h1 className="text-2xl font-bold mb-4">🧾 订单 #{order.id}</h1>
         <p className="text-sm text-gray-500 mb-4">
           状态：{order.status === "pending" && "⏳ 待支付"}
           {order.status === "paid" && "📩 已确认，等待审核"}
           {order.status === "confirmed" && "✅ 已确认"}
         </p>
+
+        {/* 🆕 客户信息 */}
+        <div className="border-t py-4">
+          <h2 className="font-bold">👤 客户信息</h2>
+          <div className="mt-2 space-y-1">
+            <p className="text-sm">
+              <span className="text-gray-500">姓名：</span>
+              <span className="font-medium">{order.customer_name || "—"}</span>
+            </p>
+            <p className="text-sm">
+              <span className="text-gray-500">电话：</span>
+              <span className="font-medium">{order.customer_phone || "—"}</span>
+            </p>
+          </div>
+        </div>
 
         <div className="border-t py-4">
           <h2 className="font-bold">📦 商品明细</h2>

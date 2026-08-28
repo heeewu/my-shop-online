@@ -10,6 +10,10 @@ export default function CartPage() {
   const [selectedMethod, setSelectedMethod] = useState<"stripe" | "pago_movil" | "binance">("stripe");
   const [isLoading, setIsLoading] = useState(false);
 
+  // 🆕 客户信息 state
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+
   // 🛡️ 防御性判断：确保 cart 是数组
   const safeCart = Array.isArray(cart) ? cart : [];
 
@@ -65,7 +69,8 @@ export default function CartPage() {
           body: JSON.stringify({
             items: safeCart,
             total: totalPrice,
-            email: "cliente@correo.com",
+            name: customerName || "Cliente",
+            phone: customerPhone || "No especificado",
             method: "pago_movil",
           }),
         });
@@ -92,7 +97,8 @@ export default function CartPage() {
           body: JSON.stringify({
             items: safeCart,
             total: totalPrice,
-            email: "cliente@correo.com",
+            name: customerName || "Cliente",
+            phone: customerPhone || "No especificado",
             method: "binance",
           }),
         });
@@ -168,6 +174,36 @@ export default function CartPage() {
 
           {/* 支付方式选择区域 */}
           <div className="bg-gray-50 p-4 border-t border-gray-200">
+            {/* 🆕 客户信息输入区域 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  👤 姓名
+                </label>
+                <input
+                  type="text"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder="Nombre y Apellido"
+                  className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  📱 电话号码
+                </label>
+                <input
+                  type="tel"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  placeholder="0412-XXX-XXXX"
+                  className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+            </div>
+
             <p className="text-sm font-medium text-gray-700 mb-3">💳 选择支付方式：</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
               {/* Stripe */}

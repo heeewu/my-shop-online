@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import AddToCartButton from "@/components/AddToCartButton";
 import CartBadge from "@/components/CartBadge";
@@ -39,23 +40,30 @@ export default async function Home() {
           {products.map((product: any) => (
             <div
               key={product.id}
-              className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden"
+              className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden flex flex-col"
             >
-              <div className="relative h-64 w-full bg-gray-200">
-                <Image
-                  src={product.image}
-                  alt={product.name}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <div className="p-4">
-                <h3 className="text-lg font-semibold text-gray-800">
-                  {product.name}
-                </h3>
-                <p className="text-xl font-bold text-blue-600 mt-1">
-                  ${product.price.toFixed(2)}
-                </p>
+              {/* ✅ 商品主体部分用 Link 包裹，点击跳转到详情页 */}
+              <Link href={`/product/${product.id}`} className="block">
+                <div className="relative h-64 w-full bg-gray-200">
+                  <Image
+                    src={product.image}
+                    alt={product.name}
+                    fill
+                    className="object-cover hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <div className="p-4">
+                  <h3 className="text-lg font-semibold text-gray-800 hover:text-blue-600 transition">
+                    {product.name}
+                  </h3>
+                  <p className="text-xl font-bold text-blue-600 mt-1">
+                    ${product.price.toFixed(2)}
+                  </p>
+                </div>
+              </Link>
+
+              {/* ✅ 按钮放在 Link 外面，防止点击按钮触发跳转 */}
+              <div className="px-4 pb-4 mt-auto">
                 <AddToCartButton
                   productId={product.id}
                   productName={product.name}
