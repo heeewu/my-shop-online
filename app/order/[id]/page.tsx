@@ -7,6 +7,7 @@ import { useCart } from "@/context/CartContext";
 
 type Order = {
   id: number;
+  order_number?: string; 
   items: any[];
   total_amount: number;
   status: string;
@@ -85,7 +86,7 @@ export default function OrderPage() {
           </button>
         </div>
 
-        <h1 className="text-2xl font-bold mb-4">🧾 订单 #{order.id}</h1>
+        <h1 className="text-2xl font-bold mb-4">🧾 订单 #{order.order_number}</h1>
         <p className="text-sm text-gray-500 mb-4">
           状态：{order.status === "pending" && "⏳ 待支付"}
           {order.status === "paid" && "📩 已确认，等待审核"}

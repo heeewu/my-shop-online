@@ -102,6 +102,7 @@ export default function ProductsPage() {
                 <th className="p-4 text-left font-semibold text-gray-700">Imagen</th>
                 <th className="p-4 text-left font-semibold text-gray-700">Nombre</th>
                 <th className="p-4 text-left font-semibold text-gray-700">Precio</th>
+                <th className="p-4 text-left font-semibold text-gray-700">Inventario</th>
                 <th className="p-4 text-left font-semibold text-gray-700">Acciones</th>
               </tr>
             </thead>
@@ -120,6 +121,15 @@ export default function ProductsPage() {
                     <td className="p-4 font-medium">{product.name}</td>
                     <td className="p-4 font-bold text-blue-600">
                       ${product.price.toFixed(2)}
+                    </td>
+                    <td className="p-4">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        product.stock === 0 ? "bg-red-100 text-red-700" :
+                        product.stock <= 5 ? "bg-yellow-100 text-yellow-700" :
+                        "bg-green-100 text-green-700"
+                      }`}>
+                        {product.stock ?? 0}
+                      </span>
                     </td>
                     <td className="p-4">
                       <div className="flex gap-2 flex-wrap items-center">
@@ -141,7 +151,7 @@ export default function ProductsPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-gray-500">
+                  <td colSpan={6} className="p-8 text-center text-gray-500">
                     {searchTerm ? (
                       <>
                         <p>🔍 No se encontraron productos para "<strong>{searchTerm}</strong>"</p>
@@ -173,8 +183,11 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      <div className="mt-6 text-xs text-gray-500">
-        💡 Busca por nombre del producto (no distingue mayúsculas/minúsculas)
+      <div className="mt-6 text-xs text-gray-500 flex gap-4 flex-wrap">
+        <span>📌 Inventario:</span>
+        <span className="text-green-700">🟢 Normal (&gt;5)</span>
+        <span className="text-yellow-700">🟡 Bajo (1-5)</span>
+        <span className="text-red-700">🔴 Agotado (0)</span>
       </div>
     </div>
   );

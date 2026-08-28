@@ -10,6 +10,7 @@ export default function NewProductPage() {
   const [uploading, setUploading] = useState(false);
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
+  const [stock, setStock] = useState("100");  // ✅ 新增 stock state
   const [image, setImage] = useState("");
   const [preview, setPreview] = useState("");
 
@@ -62,7 +63,12 @@ export default function NewProductPage() {
     const res = await fetch("/api/admin/products", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, price: parseFloat(price), image }),
+      body: JSON.stringify({
+        name,
+        price: parseFloat(price),
+        stock: parseInt(stock) || 0,  // ✅ 提交库存
+        image,
+      }),
     });
 
     if (res.ok) {
@@ -111,6 +117,22 @@ export default function NewProductPage() {
               step="0.01"
               min="0"
               placeholder="Ej: 49.99"
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* ✅ 库存输入框 */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Inventario (cantidad) *
+            </label>
+            <input
+              type="number"
+              value={stock}
+              onChange={(e) => setStock(e.target.value)}
+              required
+              min="0"
+              placeholder="Ej: 100"
               className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>

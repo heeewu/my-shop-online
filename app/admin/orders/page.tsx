@@ -71,7 +71,7 @@ export default function AdminOrdersPage() {
               {orders && orders.length > 0 ? (
                 orders.map((order: any) => (
                   <tr key={order.id} className="border-t hover:bg-gray-50 transition">
-                    <td className="p-4 font-medium">#{order.id}</td>
+                    <td className="p-4 font-medium">{order.order_number || `#${order.id}`}</td>
                     <td className="p-4">
                       <div>
                         <div className="font-medium">{order.customer_name || "—"}</div>

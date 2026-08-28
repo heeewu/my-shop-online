@@ -12,6 +12,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const [uploading, setUploading] = useState(false);
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
+  const [stock, setStock] = useState("");   // ✅ 新增 stock state
   const [image, setImage] = useState("");
   const [preview, setPreview] = useState("");
   const [productId, setProductId] = useState<number | null>(null);
@@ -34,6 +35,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
 
       setName(data.name);
       setPrice(data.price.toString());
+      setStock(data.stock?.toString() || "100");   // ✅ 加载库存，默认 100
       setImage(data.image);
       setPreview(data.image);
       setLoading(false);
@@ -85,7 +87,13 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     const res = await fetch("/api/admin/products/update", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: productId, name, price: parseFloat(price), image }),
+      body: JSON.stringify({
+        id: productId,
+        name,
+        price: parseFloat(price),
+        stock: parseInt(stock) || 0,    // ✅ 提交库存
+        image,
+      }),
     });
 
     if (res.ok) {
@@ -139,6 +147,21 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
               onChange={(e) => setPrice(e.target.value)}
               required
               step="0.01"
+              min="0"
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* ✅ 库存输入框 */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Inventario (cantidad) *
+            </label>
+            <input
+              type="number"
+              value={stock}
+              onChange={(e) => setStock(e.target.value)}
+              required
               min="0"
               className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
