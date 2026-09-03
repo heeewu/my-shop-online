@@ -4,25 +4,36 @@ import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+// ✅ 分类映射（用于显示标签）
+const CATEGORY_LABELS: Record<string, string> = {
+  FIESTA: "🎉 Fiesta",
+  COMESTICOS: "💄 Cosméticos",
+  ESCOLARES: "📚 Escolares",
+  QUINCALLERIA: "🔧 Quincallería",
+  JUGUETES: "🧸 Juguetes",
+  ACCESORIOS: "👗 Accesorios",
+};
+
 export default function ProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    async function fetchProducts() {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .order("id", { ascending: true });
+  const fetchProducts = async () => {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .order("id", { ascending: true });
 
-      if (error) {
-        console.error("Error al cargar productos:", error);
-      } else {
-        setProducts(data || []);
-      }
-      setLoading(false);
+    if (error) {
+      console.error("Error al cargar productos:", error);
+    } else {
+      setProducts(data || []);
     }
+    setLoading(false);
+  };
+
+  useEffect(() => {
     fetchProducts();
   }, []);
 
@@ -44,6 +55,23 @@ export default function ProductsPage() {
       alert("✅ Producto eliminado");
     } else {
       alert("❌ Error al eliminar");
+    }
+  };
+
+  const toggleActive = async (id: number, currentStatus: boolean) => {
+    const newStatus = !currentStatus;
+    const { error } = await supabase
+      .from("products")
+      .update({ is_active: newStatus })
+      .eq("id", id);
+
+    if (error) {
+      alert("❌ Error al actualizar estado");
+      console.error(error);
+    } else {
+      setProducts(products.map((p) =>
+        p.id === id ? { ...p, is_active: newStatus } : p
+      ));
     }
   };
 
@@ -101,9 +129,11 @@ export default function ProductsPage() {
                 <th className="p-4 text-left font-semibold text-gray-700">ID</th>
                 <th className="p-4 text-left font-semibold text-gray-700">Imagen</th>
                 <th className="p-4 text-left font-semibold text-gray-700">Nombre</th>
+                <th className="p-4 text-left font-semibold text-gray-700">Categoría</th>
                 <th className="p-4 text-left font-semibold text-gray-700">Precio</th>
                 <th className="p-4 text-left font-semibold text-gray-700">Inventario</th>
-                <th className="p-4 text-left font-semibold text-gray-700">Acciones</th>
+                <th className="p-4 text-center font-semibold text-gray-700">Estado</th>
+                <th className="p-4 text-center font-semibold text-gray-700">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -119,6 +149,11 @@ export default function ProductsPage() {
                       />
                     </td>
                     <td className="p-4 font-medium">{product.name}</td>
+                    <td className="p-4">
+                      <span className="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
+                        {CATEGORY_LABELS[product.category] || product.category || "—"}
+                      </span>
+                    </td>
                     <td className="p-4 font-bold text-blue-600">
                       ${product.price.toFixed(2)}
                     </td>
@@ -131,8 +166,20 @@ export default function ProductsPage() {
                         {product.stock ?? 0}
                       </span>
                     </td>
-                    <td className="p-4">
-                      <div className="flex gap-2 flex-wrap items-center">
+                    <td className="p-4 text-center">
+                      <button
+                        onClick={() => toggleActive(product.id, product.is_active ?? true)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition min-w-[80px] ${
+                          product.is_active !== false
+                            ? "bg-green-100 text-green-700 hover:bg-green-200"
+                            : "bg-gray-200 text-gray-500 hover:bg-gray-300"
+                        }`}
+                      >
+                        {product.is_active !== false ? "🟢 Activo" : "🔴 Inactivo"}
+                      </button>
+                    </td>
+                    <td className="p-4 text-center">
+                      <div className="flex gap-2 flex-wrap items-center justify-center">
                         <Link
                           href={`/admin/products/edit/${product.id}`}
                           className="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-3 py-1.5 rounded-lg text-xs font-medium transition"
@@ -151,7 +198,7 @@ export default function ProductsPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-500">
+                  <td colSpan={8} className="p-8 text-center text-gray-500">
                     {searchTerm ? (
                       <>
                         <p>🔍 No se encontraron productos para "<strong>{searchTerm}</strong>"</p>
@@ -188,6 +235,9 @@ export default function ProductsPage() {
         <span className="text-green-700">🟢 Normal (&gt;5)</span>
         <span className="text-yellow-700">🟡 Bajo (1-5)</span>
         <span className="text-red-700">🔴 Agotado (0)</span>
+        <span className="ml-4">📌 Estado:</span>
+        <span className="text-green-700">🟢 Activo (visible en tienda)</span>
+        <span className="text-gray-500">🔴 Inactivo (oculto)</span>
       </div>
     </div>
   );

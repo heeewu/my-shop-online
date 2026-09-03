@@ -11,6 +11,9 @@ export default function AdminDashboard() {
     paidOrders: 0,
     confirmedOrders: 0,
     totalProducts: 0,
+    todayOrders: 0,
+    todaySales: 0,
+    monthSales: 0,
     recentOrders: [] as any[],
   });
   const [loading, setLoading] = useState(true);
@@ -18,10 +21,32 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function fetchStats() {
       try {
+        // 获取所有订单
         const { data: orders } = await supabase.from("orders").select("*");
+
+        // 获取商品数量
         const { count: productCount } = await supabase
           .from("products")
           .select("*", { count: "exact", head: true });
+
+        // 计算今日订单
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayOrders = orders?.filter(
+          (o) => new Date(o.created_at) >= today
+        ) || [];
+
+        // 计算本月销售额
+        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+        const monthOrders = orders?.filter(
+          (o) => new Date(o.created_at) >= monthStart && o.status === "confirmed"
+        ) || [];
+        const monthSales = monthOrders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
+
+        // 今日销售额（只计算已确认的）
+        const todaySales = todayOrders
+          .filter((o) => o.status === "confirmed")
+          .reduce((sum, o) => sum + (o.total_amount || 0), 0);
 
         const pending = orders?.filter((o) => o.status === "pending") || [];
         const paid = orders?.filter((o) => o.status === "paid") || [];
@@ -37,6 +62,9 @@ export default function AdminDashboard() {
           paidOrders: paid.length,
           confirmedOrders: confirmed.length,
           totalProducts: productCount || 0,
+          todayOrders: todayOrders.length,
+          todaySales: todaySales,
+          monthSales: monthSales,
           recentOrders: recent,
         });
       } catch (error) {
@@ -60,8 +88,8 @@ export default function AdminDashboard() {
     <div>
       <h1 className="text-2xl font-bold text-gray-900 mb-6">📊 Resumen</h1>
 
-      {/* Tarjetas de estadísticas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      {/* 统计卡片 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500">
           <p className="text-sm text-gray-500">Total Pedidos</p>
           <p className="text-3xl font-bold text-gray-900">{stats.totalOrders}</p>
@@ -77,6 +105,23 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500">
           <p className="text-sm text-gray-500">✅ Confirmados</p>
           <p className="text-3xl font-bold text-green-600">{stats.confirmedOrders}</p>
+        </div>
+      </div>
+
+      {/* 今日和本月统计 */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-purple-500">
+          <p className="text-sm text-gray-500">📦 Productos</p>
+          <p className="text-2xl font-bold text-gray-900">{stats.totalProducts}</p>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-orange-500">
+          <p className="text-sm text-gray-500">📈 Ventas de Hoy</p>
+          <p className="text-2xl font-bold text-orange-600">${stats.todaySales.toFixed(2)}</p>
+          <p className="text-xs text-gray-400">{stats.todayOrders} pedidos</p>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-indigo-500">
+          <p className="text-sm text-gray-500">📊 Ventas del Mes</p>
+          <p className="text-2xl font-bold text-indigo-600">${stats.monthSales.toFixed(2)}</p>
         </div>
       </div>
 
@@ -126,7 +171,9 @@ export default function AdminDashboard() {
               <tbody>
                 {stats.recentOrders.map((order: any) => (
                   <tr key={order.id} className="border-t hover:bg-gray-50">
-                    <td className="p-3 font-medium">#{order.id}</td>
+                    <td className="p-3 font-medium">
+                      {order.order_number || `#${order.id}`}
+                    </td>
                     <td className="p-3">{order.customer_name || "—"}</td>
                     <td className="p-3 font-bold text-blue-600">
                       ${order.total_amount?.toFixed(2)}
@@ -153,4 +200,4 @@ export default function AdminDashboard() {
       )}
     </div>
   );
-}
+  }

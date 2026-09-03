@@ -4,13 +4,24 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+// ✅ 分类选项
+const CATEGORIES = [
+  { id: "FIESTA", label: "🎉 Fiesta" },
+  { id: "COMESTICOS", label: "💄 Cosméticos" },
+  { id: "ESCOLARES", label: "📚 Escolares" },
+  { id: "QUINCALLERIA", label: "🔧 Quincallería" },
+  { id: "JUGUETES", label: "🧸 Juguetes" },
+  { id: "ACCESORIOS", label: "👗 Accesorios" },
+];
+
 export default function NewProductPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
-  const [stock, setStock] = useState("100");  // ✅ 新增 stock state
+  const [stock, setStock] = useState("100");
+  const [category, setCategory] = useState(""); // ✅ 分类
   const [image, setImage] = useState("");
   const [preview, setPreview] = useState("");
 
@@ -58,6 +69,11 @@ export default function NewProductPage() {
       return;
     }
 
+    if (!category) {
+      alert("Selecciona una categoría");
+      return;
+    }
+
     setLoading(true);
 
     const res = await fetch("/api/admin/products", {
@@ -66,7 +82,8 @@ export default function NewProductPage() {
       body: JSON.stringify({
         name,
         price: parseFloat(price),
-        stock: parseInt(stock) || 0,  // ✅ 提交库存
+        stock: parseInt(stock) || 0,
+        category, // ✅ 发送分类
         image,
       }),
     });
@@ -91,6 +108,7 @@ export default function NewProductPage() {
 
       <div className="bg-white p-6 rounded-xl shadow-md">
         <form onSubmit={handleSubmit}>
+          {/* 商品名称 */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Nombre del Producto *
@@ -105,6 +123,7 @@ export default function NewProductPage() {
             />
           </div>
 
+          {/* 价格 */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Precio (USD) *
@@ -121,7 +140,27 @@ export default function NewProductPage() {
             />
           </div>
 
-          {/* ✅ 库存输入框 */}
+          {/* ✅ 分类 */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Categoría *
+            </label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              required
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            >
+              <option value="">Seleccionar categoría...</option>
+              {CATEGORIES.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* 库存 */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Inventario (cantidad) *
@@ -137,6 +176,7 @@ export default function NewProductPage() {
             />
           </div>
 
+          {/* 图片上传 */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Imagen del Producto * (JPG / PNG / WEBP, máx 2MB)

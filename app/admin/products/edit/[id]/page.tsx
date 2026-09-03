@@ -5,6 +5,15 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+const CATEGORIES = [
+  { id: "FIESTA", label: "🎉 Fiesta" },
+  { id: "COMESTICOS", label: "💄 Cosméticos" },
+  { id: "ESCOLARES", label: "📚 Escolares" },
+  { id: "QUINCALLERIA", label: "🔧 Quincallería" },
+  { id: "JUGUETES", label: "🧸 Juguetes" },
+  { id: "ACCESORIOS", label: "👗 Accesorios" },
+];
+
 export default function EditProductPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -12,7 +21,8 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const [uploading, setUploading] = useState(false);
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
-  const [stock, setStock] = useState("");   // ✅ 新增 stock state
+  const [stock, setStock] = useState("");
+  const [category, setCategory] = useState(""); // ✅ 分类
   const [image, setImage] = useState("");
   const [preview, setPreview] = useState("");
   const [productId, setProductId] = useState<number | null>(null);
@@ -35,7 +45,8 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
 
       setName(data.name);
       setPrice(data.price.toString());
-      setStock(data.stock?.toString() || "100");   // ✅ 加载库存，默认 100
+      setStock(data.stock?.toString() || "100");
+      setCategory(data.category || ""); // ✅ 加载分类
       setImage(data.image);
       setPreview(data.image);
       setLoading(false);
@@ -91,7 +102,8 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         id: productId,
         name,
         price: parseFloat(price),
-        stock: parseInt(stock) || 0,    // ✅ 提交库存
+        stock: parseInt(stock) || 0,
+        category, // ✅ 提交分类
         image,
       }),
     });
@@ -152,7 +164,26 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
             />
           </div>
 
-          {/* ✅ 库存输入框 */}
+          {/* ✅ 分类 */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Categoría *
+            </label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              required
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            >
+              <option value="">Seleccionar categoría...</option>
+              {CATEGORIES.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Inventario (cantidad) *

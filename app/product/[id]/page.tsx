@@ -8,12 +8,24 @@ import { useParams, useRouter } from "next/navigation";
 import AddToCartButton from "@/components/AddToCartButton";
 import { showToast } from "@/app/components/Toast";
 
+// ✅ 分类映射
+const CATEGORY_LABELS: Record<string, string> = {
+  FIESTA: "🎉 Fiesta",
+  COMESTICOS: "💄 Cosméticos",
+  ESCOLARES: "📚 Escolares",
+  QUINCALLERIA: "🔧 Quincallería",
+  JUGUETES: "🧸 Juguetes",
+  ACCESORIOS: "👗 Accesorios",
+};
+
 type Product = {
   id: number;
   name: string;
   price: number;
   image: string;
   description?: string;
+  category?: string;
+  stock?: number;
   created_at?: string;
 };
 
@@ -47,6 +59,11 @@ export default function ProductDetailPage() {
     if (productId) fetchProduct();
   }, [productId, router]);
 
+  const getCategoryLabel = (category?: string) => {
+    if (!category) return "General";
+    return CATEGORY_LABELS[category] || category;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -64,6 +81,17 @@ export default function ProductDetailPage() {
         <nav className="text-sm text-gray-500 mb-6">
           <Link href="/" className="hover:text-blue-600 transition">Inicio</Link>
           <span className="mx-2">›</span>
+          {product.category && (
+            <>
+              <Link
+                href={`/?categoria=${product.category}`}
+                className="hover:text-blue-600 transition"
+              >
+                {getCategoryLabel(product.category)}
+              </Link>
+              <span className="mx-2">›</span>
+            </>
+          )}
           <span className="text-gray-700">{product.name}</span>
         </nav>
 
@@ -95,6 +123,15 @@ export default function ProductDetailPage() {
                 {/* 商品名称 */}
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
 
+                {/* ✅ 分类标签 */}
+                {product.category && (
+                  <div className="mb-3">
+                    <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                      {getCategoryLabel(product.category)}
+                    </span>
+                  </div>
+                )}
+
                 {/* 价格 */}
                 <div className="flex items-center gap-3 mb-4">
                   <span className="text-3xl font-bold text-blue-600">${product.price.toFixed(2)}</span>
@@ -116,8 +153,8 @@ export default function ProductDetailPage() {
                 <div className="border-t border-gray-100 py-4">
                   <h3 className="font-semibold text-gray-700 mb-2">📋 Especificaciones</h3>
                   <ul className="text-sm text-gray-600 space-y-1">
-                    <li>• Categoría: General</li>
-                    <li>• Disponibilidad: ✅ En stock</li>
+                    <li>• Categoría: {getCategoryLabel(product.category)}</li>
+                    <li>• Disponibilidad: {product.stock && product.stock > 0 ? "✅ En stock" : "❌ Agotado"}</li>
                     <li>• Garantía: 30 días</li>
                   </ul>
                 </div>
@@ -146,7 +183,10 @@ export default function ProductDetailPage() {
         <div className="mt-8">
           <h2 className="text-xl font-bold text-gray-900 mb-4">🛍️ Productos relacionados</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <RelatedProducts currentId={product.id} />
+            <RelatedProducts
+              currentId={product.id}
+              currentCategory={product.category}
+            />
           </div>
         </div>
       </div>
@@ -179,22 +219,42 @@ export default function ProductDetailPage() {
   );
 }
 
-// 🔹 相关商品组件（显示同分类或其他商品）
-function RelatedProducts({ currentId }: { currentId: number }) {
+// ✅ 相关商品组件（优先显示同分类，再显示其他）
+function RelatedProducts({ currentId, currentCategory }: { currentId: number; currentCategory?: string }) {
   const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchRelated() {
-      const { data } = await supabase
+      let query = supabase
         .from("products")
         .select("*")
-        .neq("id", currentId)
-        .limit(4);
+        .eq("is_active", true)
+        .neq("id", currentId);
 
-      setProducts(data || []);
+      // 如果有分类，优先显示同分类
+      if (currentCategory) {
+        query = query.eq("category", currentCategory);
+      }
+
+      const { data } = await query.limit(4);
+
+      // 如果同分类商品不足，补充其他商品
+      if (data && data.length < 4) {
+        const { data: moreData } = await supabase
+          .from("products")
+          .select("*")
+          .eq("is_active", true)
+          .neq("id", currentId)
+          .neq("category", currentCategory || "")
+          .limit(4 - data.length);
+
+        setProducts([...(data || []), ...(moreData || [])]);
+      } else {
+        setProducts(data || []);
+      }
     }
     fetchRelated();
-  }, [currentId]);
+  }, [currentId, currentCategory]);
 
   if (products.length === 0) return null;
 
