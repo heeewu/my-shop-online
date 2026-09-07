@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { showToast } from "../app/components/Toast";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 type Props = {
   productId: number;
@@ -12,12 +14,22 @@ type Props = {
 };
 
 export default function AddToCartButton({ productId, productName, productPrice, productImage }: Props) {
+  const router = useRouter();
   const { addToCart } = useCart();
   const [isAdded, setIsAdded] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  const handleAddToCart = () => {
-    // 添加到购物车
+  const handleAddToCart = async () => {
+    // ✅ 检查用户是否登录
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      showToast("🔒 Inicia sesión para agregar al carrito", "warning", 3000);
+      setTimeout(() => router.push("/auth/login"), 1500);
+      return;
+    }
+
+    // 已登录，添加到购物车
     addToCart({ id: productId, name: productName, price: productPrice, image: productImage });
 
     // 触发动画
