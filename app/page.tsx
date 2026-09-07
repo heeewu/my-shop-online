@@ -3,6 +3,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import AddToCartButton from "@/components/AddToCartButton";
 import CartBadge from "@/components/CartBadge";
+import UserMenu from "@/components/UserMenu"; // ✅ 导入用户菜单
 
 // 分类配置
 const CATEGORIES = [
@@ -54,7 +55,11 @@ export default async function Home({
               </Link>
               <p className="text-sm text-gray-500 hidden sm:block">Envíos a todo el país</p>
             </div>
-            <CartBadge />
+            {/* ✅ 用户菜单 + 购物车 */}
+            <div className="flex items-center gap-4">
+              <UserMenu />
+              <CartBadge />
+            </div>
           </div>
         </div>
       </div>

@@ -1,0 +1,8 @@
+{
+  "appId": "com.mitienda.app",
+  "appName": "Mi Tienda",
+  "webDir": "dist",
+  "server": {
+    "url": "https://my-shop-online.vercel.app"
+  }
+}

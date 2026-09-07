@@ -29,7 +29,6 @@ async function generateOrderNumber(): Promise<string> {
 
   if (error) {
     console.error("Error al contar pedidos:", error);
-    // 如果查询失败，使用时间戳作为后备
     return `WEB-${dateStr}-${String(Date.now()).slice(-6)}`;
   }
 
@@ -41,6 +40,9 @@ export async function POST(req: Request) {
   try {
     // 从请求体中获取订单信息
     const { items, total, name, phone, method } = await req.json();
+
+    // ✅ 获取当前登录用户
+    const { data: { user } } = await supabase.auth.getUser();
 
     // ✅ 生成订单号
     const orderNumber = await generateOrderNumber();
@@ -68,7 +70,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // ✅ 插入订单到 Supabase 的 orders 表（包含 order_number）
+    // ✅ 插入订单到 Supabase 的 orders 表（包含 order_number 和 user_id）
     const { data, error } = await supabase
       .from("orders")
       .insert([
@@ -79,7 +81,8 @@ export async function POST(req: Request) {
           total_amount: total,
           status: "pending",
           payment_method: method,
-          order_number: orderNumber, // ✅ 新增订单号
+          order_number: orderNumber,
+          user_id: user?.id || null, // ✅ 关联当前登录用户
         },
       ])
       .select()
