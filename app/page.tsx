@@ -3,36 +3,42 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import AddToCartButton from "@/components/AddToCartButton";
 import CartBadge from "@/components/CartBadge";
-import UserMenu from "@/components/UserMenu"; // ✅ 导入用户菜单
+import UserMenu from "@/components/UserMenu";
+import BackToTop from "@/components/BackToTop";
 
 // 分类配置
 const CATEGORIES = [
-  { id: "FIESTA", label: "🎉 Fiesta", icon: "🎉", color: "bg-pink-100 border-pink-300" },
-  { id: "COMESTICOS", label: "💄 Cosméticos", icon: "💄", color: "bg-rose-100 border-rose-300" },
-  { id: "ESCOLARES", label: "📚 Escolares", icon: "📚", color: "bg-blue-100 border-blue-300" },
-  { id: "QUINCALLERIA", label: "🔧 Quincallería", icon: "🔧", color: "bg-orange-100 border-orange-300" },
-  { id: "JUGUETES", label: "🧸 Juguetes", icon: "🧸", color: "bg-purple-100 border-purple-300" },
-  { id: "ACCESORIOS", label: "👗 Accesorios", icon: "👗", color: "bg-teal-100 border-teal-300" },
+  { id: "FIESTA", label: "🎉 Fiesta", icon: "🎉", color: "bg-pink-50" },
+  { id: "COMESTICOS", label: "💄 Cosméticos", icon: "💄", color: "bg-rose-50" },
+  { id: "ESCOLARES", label: "📚 Escolares", icon: "📚", color: "bg-blue-50" },
+  { id: "QUINCALLERIA", label: "🔧 Quincallería", icon: "🔧", color: "bg-orange-50" },
+  { id: "JUGUETES", label: "🧸 Juguetes", icon: "🧸", color: "bg-purple-50" },
+  { id: "ACCESORIOS", label: "👗 Accesorios", icon: "👗", color: "bg-teal-50" },
 ];
 
 export default async function Home({
   searchParams,
 }: {
-  searchParams: { categoria?: string };
+  searchParams: { categoria?: string; search?: string };
 }) {
   const categoriaFiltro = searchParams?.categoria || null;
+  const searchTerm = searchParams?.search || null;
 
   // 查询商品
   let query = supabase
     .from("products")
     .select("*")
-    .eq("is_active", true)
-    .order("id", { ascending: true });
+    .eq("is_active", true);
 
-  // 如果有分类筛选
   if (categoriaFiltro) {
     query = query.eq("category", categoriaFiltro);
   }
+
+  if (searchTerm) {
+    query = query.ilike("name", `%${searchTerm}%`);
+  }
+
+  query = query.order("id", { ascending: true });
 
   const { data: products, error } = await query;
 
@@ -40,6 +46,8 @@ export default async function Home({
     console.error("Error al cargar productos:", error);
     return <div className="p-10 text-red-500">Error al cargar productos</div>;
   }
+
+  const currentCategory = CATEGORIES.find((c) => c.id === categoriaFiltro);
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -55,7 +63,6 @@ export default async function Home({
               </Link>
               <p className="text-sm text-gray-500 hidden sm:block">Envíos a todo el país</p>
             </div>
-            {/* ✅ 用户菜单 + 购物车 */}
             <div className="flex items-center gap-4">
               <UserMenu />
               <CartBadge />
@@ -64,44 +71,78 @@ export default async function Home({
         </div>
       </div>
 
-      {/* 分类导航 */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-700">
-            📌 Categorías
-          </h2>
-          {categoriaFiltro && (
+      {/* 搜索框 */}
+      <div className="max-w-7xl mx-auto px-4 py-4">
+        <form action="/" method="GET" className="relative max-w-2xl mx-auto">
+          <input
+            type="text"
+            name="search"
+            defaultValue={searchTerm || ""}
+            placeholder="Buscar productos..."
+            className="w-full p-3 pl-12 pr-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm bg-white"
+          />
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">
+            🔍
+          </span>
+          <button
+            type="submit"
+            className="absolute right-1 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
+          >
+            Buscar
+          </button>
+          {searchTerm && (
             <Link
               href="/"
-              className="text-sm text-blue-600 hover:underline"
+              className="absolute right-20 top-1/2 -translate-y-1/2 text-sm text-gray-400 hover:text-gray-600 transition"
             >
-              ✕ Limpiar filtro
+              ✕
             </Link>
           )}
+        </form>
+      </div>
+
+      {/* 分类导航 */}
+      <div className="max-w-7xl mx-auto px-4 py-2">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-700">📌 Categorías</h2>
+          <div className="flex items-center gap-3">
+            {categoriaFiltro && (
+              <Link href="/" className="text-sm text-blue-600 hover:underline">
+                ✕ Limpiar
+              </Link>
+            )}
+            <Link href="/" className="text-sm text-blue-600 hover:underline">
+              Ver todas →
+            </Link>
+          </div>
         </div>
 
-        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-3">
-          {CATEGORIES.map((cat) => {
-            const isActive = categoriaFiltro === cat.id;
-            return (
+        <div className="relative">
+          <div className="flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide md:grid md:grid-cols-3 lg:grid-cols-6 md:overflow-visible md:pb-0">
+            {CATEGORIES.map((cat) => (
               <Link
                 key={cat.id}
                 href={`/?categoria=${cat.id}`}
-                className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
-                  isActive
-                    ? `${cat.color} border-blue-500 shadow-md scale-105`
-                    : `${cat.color} border-transparent hover:shadow-md hover:scale-105`
-                }`}
+                className="flex-shrink-0 w-[130px] md:w-auto snap-start group"
               >
-                <span className="text-3xl mb-1">{cat.icon}</span>
-                <span className={`text-xs font-medium text-center ${
-                  isActive ? "text-blue-700" : "text-gray-700"
-                }`}>
-                  {cat.label}
-                </span>
+                <div
+                  className={`flex flex-col items-center justify-center p-4 rounded-xl ${cat.color} shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300`}
+                >
+                  <span className="text-4xl mb-1 group-hover:scale-110 transition-transform duration-300">
+                    {cat.icon}
+                  </span>
+                  <span className="text-xs font-medium text-center text-gray-700 group-hover:text-blue-600 transition">
+                    {cat.label}
+                  </span>
+                </div>
               </Link>
-            );
-          })}
+            ))}
+          </div>
+          <div className="flex justify-center mt-1 md:hidden">
+            <span className="text-xs text-gray-400 animate-pulse">
+              ← Desliza para ver más →
+            </span>
+          </div>
         </div>
       </div>
 
@@ -109,8 +150,10 @@ export default async function Home({
       <div className="max-w-7xl mx-auto px-4 pb-8">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold text-gray-700">
-            {categoriaFiltro
-              ? `🛍️ ${CATEGORIES.find((c) => c.id === categoriaFiltro)?.label || "Productos"}`
+            {searchTerm
+              ? `🔍 Resultados para "${searchTerm}"`
+              : categoriaFiltro && currentCategory
+              ? `🛍️ ${currentCategory.label}`
               : "🛍️ Todos los productos"}
           </h2>
           <span className="text-sm text-gray-400">
@@ -133,7 +176,6 @@ export default async function Home({
                       fill
                       className="object-cover hover:scale-105 transition-transform duration-300"
                     />
-                    {/* 分类标签 */}
                     {product.category && (
                       <span className="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full">
                         {product.category}
@@ -163,10 +205,16 @@ export default async function Home({
           </div>
         ) : (
           <div className="text-center py-12 text-gray-500">
-            <p className="text-lg">No hay productos en esta categoría</p>
-            <Link href="/" className="text-blue-600 hover:underline text-sm mt-2 inline-block">
-              Ver todos los productos →
-            </Link>
+            <p className="text-lg">
+              {searchTerm
+                ? `No se encontraron productos para "${searchTerm}"`
+                : "No hay productos en esta categoría"}
+            </p>
+            {searchTerm && (
+              <Link href="/" className="text-blue-600 hover:underline text-sm mt-2 inline-block">
+                ← Ver todos los productos
+              </Link>
+            )}
           </div>
         )}
       </div>
@@ -177,6 +225,9 @@ export default async function Home({
           © 2024 Mi Tienda. Todos los derechos reservados.
         </div>
       </footer>
+
+      {/* 回到顶部按钮 */}
+      <BackToTop />
     </main>
   );
 }

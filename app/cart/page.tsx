@@ -14,18 +14,45 @@ export default function CartPage() {
 
   const safeCart = Array.isArray(cart) ? cart : [];
 
-  // 检查登录状态
+  // ✅ 检查登录状态
   useEffect(() => {
     async function checkAuth() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        router.push("/auth/login");
+        setIsLoggedIn(false);
         return;
       }
       setIsLoggedIn(true);
     }
     checkAuth();
-  }, [router]);
+  }, []);
+
+  // ✅ 未登录：显示“请登录”提示页面（不自动跳转）
+  if (isLoggedIn === false) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
+          <div className="text-6xl mb-4">🔒</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Inicia sesión para ver tu carrito</h2>
+          <p className="text-gray-500 mb-6">Necesitas tener una cuenta para agregar productos al carrito y realizar compras.</p>
+          <div className="flex flex-col gap-3">
+            <Link
+              href="/auth/login"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition"
+            >
+              Iniciar Sesión
+            </Link>
+            <Link
+              href="/auth/register"
+              className="text-blue-600 hover:underline"
+            >
+              ¿No tienes cuenta? Regístrate aquí
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // 加载中
   if (isLoggedIn === null) {
@@ -36,7 +63,7 @@ export default function CartPage() {
     );
   }
 
-  // 空购物车状态
+  // 空购物车状态（已登录）
   if (safeCart.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
